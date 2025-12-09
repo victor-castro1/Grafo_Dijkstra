@@ -1,0 +1,373 @@
+|| PARA A CLASSE "DIJKSTRA", SÓ FAZER ISSO ||
+
+
+
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Dijkstra {
+
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void dijkstraInterativo(int[][] grafo, int origem, int numVertices) {
+        System.out.println("\n╔══════════════════════════════════════════");
+        System.out.println("║   ALGORITMO DE DIJKSTRA - MODO INTERATIVO ║");
+        System.out.println("════════════════════════════════════════════\n");
+
+        // Inicialização
+        int[] distancias = new int[numVertices];
+        boolean[] visitados = new boolean[numVertices];
+        int[] predecessor = new int[numVertices];
+
+        for (int i = 0; i < numVertices; i++) {
+            distancias[i] = Integer.MAX_VALUE;
+            predecessor[i] = -1;
+        }
+        distancias[origem] = 0;
+
+        System.out.println(" INICIALIZAÇÃO:");
+        System.out.println("   Origem: Vértice " + origem);
+        System.out.println("   Distâncias iniciais e predecessores:");
+        mostrarEstado(distancias, visitados, predecessor, numVertices);
+        pausar();
+
+        // Processa cada vértice
+        for (int iteracao = 0; iteracao < numVertices; iteracao++) {
+            System.out.println("\n" + "=".repeat(60));
+            System.out.println(" ITERAÇÃO " + (iteracao + 1) + " de " + numVertices);
+            System.out.println("=".repeat(60));
+
+            // Encontra o vértice não visitado com menor distância
+            int u = -1;
+            int minDist = Integer.MAX_VALUE;
+
+            System.out.println("\n Procurando o vértice NÃO VISITADO com MENOR distância...");
+            for (int v = 0; v < numVertices; v++) {
+                if (!visitados[v]) {
+                    String dist = (distancias[v] == Integer.MAX_VALUE) ? "∞" : String.valueOf(distancias[v]);
+                    boolean ehCandidato = distancias[v] < minDist;
+                    System.out.println("   Vértice " + v + ": distância = " + dist +
+                            (ehCandidato ? " ← CANDIDATO" : ""));
+
+                    // SELEÇÃO do vértice de menor distância
+                    if (distancias[v] < minDist) {
+                        minDist = distancias[v];
+                        u = v;
+                    }
+                }
+            }
+
+            if (u == -1) {
+                System.out.println("\n Não há mais vértices alcançáveis. Finalizando...");
+                break;
+            }
+
+            System.out.println("\n Escolhido (SELEÇÃO): Vértice " + u + " (distância = " + distancias[u] + ")");
+            pausar();
+
+            // Marca como visitado
+            visitados[u] = true;
+            System.out.println("\n✓ Vértice " + u + " marcado como VISITADO");
+
+            // Atualiza vizinhos (RELAXAMENTO)
+            System.out.println("\n Atualizando distâncias dos VIZINHOS do vértice " + u + " (RELAXAMENTO):");
+            boolean temVizinhos = false;
+
+            for (int v = 0; v < numVertices; v++) {
+                if (grafo[u][v] > 0 && !visitados[v]) {
+                    temVizinhos = true;
+                    int distAtual = distancias[v];
+                    int novaDist = (distancias[u] == Integer.MAX_VALUE)
+                            ? Integer.MAX_VALUE
+                            : distancias[u] + grafo[u][v];
+
+                    System.out.println("\n   → Vizinho: Vértice " + v);
+                    System.out.println("     Peso da aresta (" + u + " → " + v + "): " + grafo[u][v]);
+                    System.out.println("     Distância atual de " + v + ": " +
+                            (distAtual == Integer.MAX_VALUE ? "∞" : distAtual));
+
+                    if (distancias[u] == Integer.MAX_VALUE) {
+                        System.out.println("     Nova distância: ∞ (origem ainda não alcança " + u + ")");
+                        System.out.println("      Nenhuma atualização realizada.");
+                    } else {
+                        System.out.println("     Nova distância candidata: " + distancias[u] + " + " + grafo[u][v] + " = " + novaDist);
+
+                        if (novaDist < distancias[v]) {
+                            System.out.println("      " + novaDist + " < " +
+                                    (distAtual == Integer.MAX_VALUE ? "∞" : distAtual) +
+                                    " → RELAXA e ATUALIZA!");
+                            distancias[v] = novaDist;
+                            predecessor[v] = u;
+                        } else {
+                            System.out.println("      " + novaDist + " >= " +
+                                    (distAtual == Integer.MAX_VALUE ? "∞" : distAtual) +
+                                    " → mantém o valor antigo (NÃO RELAXA)");
+                        }
+                    }
+                }
+            }
+
+            if (!temVizinhos) {
+                System.out.println("   (Nenhum vizinho não visitado)");
+            }
+
+            System.out.println("\n Estado atual das distâncias, visitados e predecessores:");
+            mostrarEstado(distancias, visitados, predecessor, numVertices);
+            pausar();
+        }
+
+        // Resultados finais
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println(" ALGORITMO CONCLUÍDO!");
+        System.out.println("=".repeat(60));
+        imprimirResultadosFinais(distancias, predecessor, origem, numVertices);
+    }
+
+    private static void mostrarEstado(int[] distancias, boolean[] visitados, int[] predecessor, int numVertices) {
+        System.out.println("\n   Vértice | Distância | Visitado | Predecessor");
+        System.out.println("   " + "-".repeat(50));
+        for (int i = 0; i < numVertices; i++) {
+            String dist = (distancias[i] == Integer.MAX_VALUE) ? "∞" : String.valueOf(distancias[i]);
+            String visit = visitados[i] ? "✓" : "✗";
+            String pred = (predecessor[i] == -1) ? "-" : String.valueOf(predecessor[i]);
+            System.out.printf("      %d    |   %5s   |    %s     |     %s\n", i, dist, visit, pred);
+        }
+    }
+
+    private static void pausar() {
+        System.out.println("\n️  Aperte ENTER para continuar...");
+        scanner.nextLine();
+    }
+
+    private static void imprimirResultadosFinais(int[] distancias, int[] predecessor,
+                                                 int origem, int numVertices) {
+        System.out.println("\n DISTÂNCIAS MÍNIMAS a partir do vértice " + origem + ":\n");
+
+        for (int i = 0; i < numVertices; i++) {
+            if (distancias[i] == Integer.MAX_VALUE) {
+                System.out.println("   Vértice " + i + ": INALCANÇÁVEL");
+            } else {
+                System.out.print("   Vértice " + i + ": distância = " + distancias[i]);
+
+                // Mostra o caminho
+                List<Integer> caminho = reconstruirCaminho(predecessor, i);
+                if (caminho.size() > 1) {
+                    System.out.print(" | Caminho: ");
+                    for (int j = 0; j < caminho.size(); j++) {
+                        System.out.print(caminho.get(j));
+                        if (j < caminho.size() - 1) System.out.print(" → ");
+                    }
+                }
+                System.out.println();
+            }
+        }
+
+        // Resumo dos caminhos mínimos origem → destino
+        System.out.println("\n RESUMO DOS CAMINHOS MÍNIMOS (origem → destino):\n");
+        for (int i = 0; i < numVertices; i++) {
+            if (distancias[i] != Integer.MAX_VALUE) {
+                List<Integer> caminho = reconstruirCaminho(predecessor, i);
+                System.out.print("   " + origem + " → " + i + " : ");
+                for (int j = 0; j < caminho.size(); j++) {
+                    System.out.print(caminho.get(j));
+                    if (j < caminho.size() - 1) System.out.print(" → ");
+                }
+                System.out.println("  (distância = " + distancias[i] + ")");
+            } else {
+                System.out.println("   " + origem + " → " + i + " : INALCANÇÁVEL");
+            }
+        }
+
+        // Opção para visualizar caminhos com desenho
+        System.out.println("\n Quer visualizar algum caminho desenhado? (s/n): ");
+        String resposta = scanner.nextLine();
+        if (resposta.equalsIgnoreCase("s")) {
+            System.out.print("Digite o vértice de DESTINO (0 a " + (numVertices - 1) + "): ");
+            int destino = scanner.nextInt();
+            scanner.nextLine();
+
+            if (destino >= 0 && destino < numVertices && distancias[destino] != Integer.MAX_VALUE) {
+                desenharCaminho(predecessor, origem, destino, distancias[destino]);
+            } else {
+                System.out.println(" Destino inválido ou inalcançável!");
+            }
+        }
+    }
+
+    private static void desenharCaminho(int[] predecessor, int origem, int destino, int distanciaTotal) {
+        List<Integer> caminho = reconstruirCaminho(predecessor, destino);
+
+        System.out.println("\n╔════════════════════════════════════════════╗");
+        System.out.println("║        VISUALIZAÇÃO DO CAMINHO             ║");
+        System.out.println("╚════════════════════════════════════════════╝\n");
+
+        System.out.println(" Origem: Vértice " + origem);
+        System.out.println(" Destino: Vértice " + destino);
+        System.out.println(" Distância Total: " + distanciaTotal);
+        System.out.println();
+
+        // Desenho em árvore
+        System.out.println(" CAMINHO COMPLETO:\n");
+
+        for (int i = 0; i < caminho.size(); i++) {
+            int vertice = caminho.get(i);
+
+            // Desenha o vértice
+            if (i == 0) {
+                System.out.println("    ╔═══════════╗");
+                System.out.println("    ║  ORIGEM   ║");
+                System.out.println("    ║ Vértice " + vertice + " ║");
+                System.out.println("    ╚═══════════╝");
+            } else if (i == caminho.size() - 1) {
+                System.out.println("    ╔═══════════╗");
+                System.out.println("    ║  DESTINO  ║");
+                System.out.println("    ║ Vértice " + vertice + " ║");
+                System.out.println("    ╚═══════════╝");
+            } else {
+                System.out.println("    ╔═══════════╗");
+                System.out.println("    ║ Vértice " + vertice + " ║");
+                System.out.println("    ╚═══════════╝");
+            }
+
+            // Desenha a seta entre vértices
+            if (i < caminho.size() - 1) {
+                System.out.println("         │");
+                System.out.println("         │");
+                System.out.println("         ▼");
+            }
+        }
+
+        // Desenho linear alternativo
+        System.out.println("\n\n CAMINHO LINEAR:\n");
+        System.out.println("    " + "─".repeat(50));
+        System.out.print("    ");
+
+        for (int i = 0; i < caminho.size(); i++) {
+            if (i == 0) {
+                System.out.print(" [" + caminho.get(i) + "]");
+            } else if (i == caminho.size() - 1) {
+                System.out.print(" ──→  [" + caminho.get(i) + "]");
+            } else {
+                System.out.print(" ──→ [" + caminho.get(i) + "]");
+            }
+        }
+
+        System.out.println();
+        System.out.println("    " + "─".repeat(50));
+
+        // Legenda
+        System.out.println("\n   [ ] = Vértice intermediário");
+
+        // Passo a passo com distâncias
+        System.out.println("\n\n PASSOS COM DISTÂNCIAS ACUMULADAS:\n");
+        for (int i = 0; i < caminho.size(); i++) {
+            int vertice = caminho.get(i);
+
+            if (i == 0) {
+                System.out.println("    Passo " + (i + 1) + ": Partida do vértice " + vertice +
+                        " (distância = 0)");
+            } else {
+                int anterior = caminho.get(i - 1);
+                System.out.println("    Passo " + (i + 1) + ": De vértice " + anterior +
+                        " → vértice " + vertice);
+            }
+        }
+
+        System.out.println("\n     Chegou ao destino! Distância total percorrida: " + distanciaTotal);
+    }
+
+    private static List<Integer> reconstruirCaminho(int[] predecessor, int destino) {
+        List<Integer> caminho = new ArrayList<>();
+        int v = destino;
+        while (v != -1) {
+            caminho.add(0, v);
+            v = predecessor[v];
+        }
+        return caminho;
+    }
+}
+
+
+
+
+|| PARA A CLASSE "MAIN", SÓ FAZER ISSO ||
+
+
+
+
+
+
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("╔════════════════════════════════════════════╗");
+        System.out.println("║        DIJKSTRA - MODO INTERATIVO          ║");
+        System.out.println("╚════════════════════════════════════════════╝\n");
+
+        // Grafo de exemplo
+        int numVertices = 6;
+        int[][] grafo = {
+                {0, 4, 2, 0, 0, 0},
+                {4, 0, 1, 5, 0, 0},
+                {2, 1, 0, 8, 10, 0},
+                {0, 5, 8, 0, 2, 6},
+                {0, 0, 10, 2, 0, 3},
+                {0, 0, 0, 6, 3, 0}
+        };
+
+        System.out.println("GRAFO (Matriz de Adjacência):");
+        System.out.println("   (0 = sem conexão)\n");
+        System.out.print("     ");
+        for (int i = 0; i < numVertices; i++) {
+            System.out.printf("%3d ", i);
+        }
+        System.out.println();
+        System.out.println("   " + "-".repeat(numVertices * 4 + 3));
+
+        for (int i = 0; i < numVertices; i++) {
+            System.out.printf(" %d | ", i);
+            for (int j = 0; j < numVertices; j++) {
+                System.out.printf("%3d ", grafo[i][j]);
+            }
+            System.out.println();
+        }
+
+        // Escolhe origem com validação (nenhum valor inválido aceito)
+        int origem;
+        while (true) {
+            System.out.print("\nDigite o vértice de ORIGEM (0 a " + (numVertices - 1) + "): ");
+
+            if (scanner.hasNextInt()) {
+                origem = scanner.nextInt();
+                scanner.nextLine(); // limpa buffer
+
+                if (origem >= 0 && origem < numVertices) {
+                    break; // valor válido
+                } else {
+                    System.out.println(" Valor inválido! O vértice deve estar entre 0 e " + (numVertices - 1) + ".");
+                }
+            } else {
+                System.out.println(" Entrada inválida! Digite um número inteiro.");
+                scanner.nextLine(); // descarta entrada inválida
+            }
+        }
+
+        // Executa Dijkstra interativo
+        Dijkstra.dijkstraInterativo(grafo, origem, numVertices);
+
+        // Opção de executar novamente
+        System.out.print("\n\n Quer executar com outro vértice de origem? (s/n): ");
+        String resposta = scanner.nextLine();
+
+        if (resposta.equalsIgnoreCase("s")) {
+            main(args);
+        } else {
+            System.out.println("\n Valeu Irmão, Tamo Junto :)");
+            scanner.close();
+        }
+    }
+}
